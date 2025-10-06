@@ -41,23 +41,27 @@ def printar_jogo(jogo) -> None:
                 print("O", end="")
         print("|")
 
-j1 = novo_jogo(6, 7)
-# printar_jogo(j1)
-j1 = adicionar(j1, 1, 3)
-# printar_jogo(j1)
-j1 = adicionar(j1, 2, 3)
-printar_jogo(j1)
+def teste():
+    j1 = novo_jogo(6, 7)
+    # printar_jogo(j1)
+    j1 = adicionar(j1, 1, 3)
+    # printar_jogo(j1)
+    j1 = adicionar(j1, 2, 3)
+    printar_jogo(j1)
+    
+    j2 = novo_jogo(6, 7)
+    for i in range(10):
+        j2 = adicionar(j2, i % 2 + 1, randint(0, 6))
+    
+    printar_jogo(j2)
+    print(f"{ganhou(j2) = }")
+    
+    a = time()
+    
+    for _ in range(100000):
+        _ = adicionar(j2, 1, 1)
+    
+    print(f"tempo: {time() - a}")
 
-j2 = novo_jogo(6, 7)
-for i in range(10):
-    j2 = adicionar(j2, i % 2 + 1, randint(0, 6))
-
-printar_jogo(j2)
-print(f"{ganhou(j2) = }")
-
-a = time()
-
-for _ in range(100000):
-    _ = adicionar(j2, 1, 1)
-
-print(f"tempo: {time() - a}")
+if "__main__" == __name__:
+    teste()
