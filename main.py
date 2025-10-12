@@ -53,16 +53,148 @@ def printar_jogo(jogo) -> None:
         print("│")
     print("╰1─2─3─4─5─6─7─╯")
 
-# ----------------- inteligência -----------------
+# ----------------- inteligências -----------------
+def heuristica_simples(tabuleiro, jogador):
+    pontos = 0
+    for coluna in range(7):
+        for linha in range(6):
+            if tabuleiro[coluna][linha] == jogador:
+                pontos += 1
+                if coluna == 3:
+                    pontos += 1
+    return pontos
 
-def inteligencia1(jogo) -> int:
-    return 0
+def heuristica_intermediaria(tabuleiro, jogador):
+    pontos = 0
+    # Horizontal
+    for linha in range(6):
+        for coluna in range(4):
+            janela = [tabuleiro[coluna+i][linha] for i in range(4)]
+            if janela.count(jogador) == 3 and janela.count(0) == 1:
+                pontos += 10
+            elif janela.count(jogador) == 2 and janela.count(0) == 2:
+                pontos += 3
+    # Vertical
+    for coluna in range(7):
+        for linha in range(3):
+            janela = [tabuleiro[coluna][linha+i] for i in range(4)]
+            if janela.count(jogador) == 3 and janela.count(0) == 1:
+                pontos += 10
+            elif janela.count(jogador) == 2 and janela.count(0) == 2:
+                pontos += 3
+    # Diagonal 1
+    for coluna in range(4):
+        for linha in range(3):
+            janela = [tabuleiro[coluna+i][linha+i] for i in range(4)]
+            if janela.count(jogador) == 3 and janela.count(0) == 1:
+                pontos += 10
+            elif janela.count(jogador) == 2 and janela.count(0) == 2:
+                pontos += 3
+    # Diagonal 2
+    for coluna in range(3, 7):
+        for linha in range(3):
+            janela = [tabuleiro[coluna-i][linha+i] for i in range(4)]
+            if janela.count(jogador) == 3 and janela.count(0) == 1:
+                pontos += 10
+            elif janela.count(jogador) == 2 and janela.count(0) == 2:
+                pontos += 3
+    return pontos
 
-def inteligencia2(jogo) -> int:
-    return 0
+def heuristica_avancada(tabuleiro, jogador):
+    pontos = 0
+    # Possíveis vitórias
+    for linha in range(6):
+        if tabuleiro[3][linha] == jogador:
+            pontos += 4
+    for linha in range(6):
+        for coluna in range(4):
+            janela = [tabuleiro[coluna+i][linha] for i in range(4)]
+            pontos += avaliar_janela(janela, jogador)
+    for coluna in range(7):
+        for linha in range(3):
+            janela = [tabuleiro[coluna][linha+i] for i in range(4)]
+            pontos += avaliar_janela(janela, jogador)
+    for coluna in range(4):
+        for linha in range(3):
+            janela = [tabuleiro[coluna+i][linha+i] for i in range(4)]
+            pontos += avaliar_janela(janela, jogador)
+    for coluna in range(3, 7):
+        for linha in range(3):
+            janela = [tabuleiro[coluna-i][linha+i] for i in range(4)]
+            pontos += avaliar_janela(janela, jogador)
+    # Bloquear
+    pontos -= heuristica_intermediaria(tabuleiro, 3-jogador) * 2
+    return pontos
 
-def inteligencia3(jogo) -> int:
-    return 0
+# Jogadas Futuras
+def avaliar_janela(janela, jogador):
+    pontos = 0
+    adversario = 1 if jogador == 2 else 2
+    if janela.count(jogador) == 4:
+        pontos += 1000
+    elif janela.count(jogador) == 3 and janela.count(0) == 1:
+        pontos += 50
+    elif janela.count(jogador) == 2 and janela.count(0) == 2:
+        pontos += 10
+    # Bloqueios Possíveis
+    if janela.count(adversario) == 3 and janela.count(0) == 1:
+        pontos -= 80
+    return pontos
+
+def ordenar_jogadas(tabuleiro, jogador, heuristica_func):
+    jogadas = [] 
+    for coluna in range(7): 
+        if tabuleiro[coluna][0] == 0:
+            novo_tabuleiro = adicionar(tabuleiro, jogador, coluna)
+            valor = heuristica_func(novo_tabuleiro, jogador)
+            jogadas.append((valor, coluna))
+    jogadas.sort(reverse=True)
+    return [col for valor, col in jogadas]
+
+def minimax_simples(tabuleiro, profundidade, maximizando):
+    # Minimax simples, sem poda alfa-beta
+    vencedor = ganhou(tabuleiro)
+    if profundidade == 0 or vencedor != 0:
+        return heuristica_simples(tabuleiro, 2) - heuristica_simples(tabuleiro, 1)
+
+    # MAX
+    if maximizando:
+        melhor_valor = float('-inf')
+        for coluna in range(7):
+            if tabuleiro[coluna][0] == 0: # se a coluna não estiver cheia
+                tabuleiro_novo = adicionar(tabuleiro, 2, coluna) # simula a jogada
+                valor = minimax_simples(tabuleiro_novo, profundidade-1, False) # melhor jogada
+                if valor > melhor_valor:
+                    melhor_valor = valor
+        return melhor_valor
+    else:
+        pior_valor = float('inf')
+        for coluna in range(7):
+            if tabuleiro[coluna][0] == 0:
+                tabuleiro_novo = adicionar(tabuleiro, 1, coluna)
+                valor = minimax_simples(tabuleiro_novo, profundidade-1, True)
+                if valor < pior_valor:
+                    pior_valor = valor
+        return pior_valor
+
+
+def inteligencia1(tabuleiro) -> int:
+    melhor_jogada = 0 
+    melhor_valor = -float('inf')
+    for coluna in range(7): # para cada coluna
+        if tabuleiro[coluna][0] == 0: # se a coluna não estiver cheia
+            novo_tabuleiro = adicionar(tabuleiro, 2, coluna) # simula a jogada
+            valor = minimax_simples(novo_tabuleiro, 2, False) # melhor jogada
+            if valor > melhor_valor:
+                melhor_valor = valor
+                melhor_jogada = coluna
+    return melhor_jogada
+
+def inteligencia2(tabuleiro) -> int:
+   return 0
+
+def inteligencia3(tabuleiro) -> int:
+   return 0 
 
 # ----------------- testes -----------------
 
