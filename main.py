@@ -217,8 +217,54 @@ def inteligencia1(tabuleiro) -> int:
                 melhor_jogada = coluna
     return melhor_jogada
 
+
+
+def minimax_alfa_beta(tabuleiro, profundidade, alfa, beta, maximizando):
+    vencedor = ganhou(tabuleiro)
+
+    if vencedor != 0 or profundidade == 0:
+        if vencedor == 2: return 100000 + profundidade
+        if vencedor == 1: return -100000 - profundidade
+        return heuristica_intermediaria(tabuleiro, 2) - heuristica_intermediaria(tabuleiro, 1)
+
+    if maximizando:
+        melhor_valor = -float('inf')
+        for coluna in range(7):
+            if tabuleiro[coluna][0] == 0:
+                tabuleiro_novo = adicionar(tabuleiro, 2, coluna)
+                valor = minimax_alfa_beta(tabuleiro_novo, profundidade - 1, alfa, beta, False)
+                if valor > melhor_valor:
+                    melhor_valor = valor
+                alfa = max(alfa, melhor_valor)
+                if alfa >= beta:
+                    break
+        return melhor_valor
+    else:
+        pior_valor = float('inf')
+        for coluna in range(7):
+            if tabuleiro[coluna][0] == 0:
+                tabuleiro_novo = adicionar(tabuleiro, 1, coluna)
+                valor = minimax_alfa_beta(tabuleiro_novo, profundidade - 1, alfa, beta, True)
+                if valor < pior_valor:
+                    pior_valor = valor
+                beta = min(beta, pior_valor)
+                if alfa >= beta:
+                    break
+        return pior_valor
+    
 def inteligencia2(tabuleiro) -> int:
-   return 0
+    profundidade = 4
+    melhor_jogada = 0
+    melhor_valor = -float('inf')
+    for coluna in range(7):
+        if tabuleiro[coluna][0] == 0:
+            novo_tabuleiro = adicionar(tabuleiro, 2, coluna)
+            valor = minimax_alfa_beta(novo_tabuleiro,profundidade - 1,-float('inf'),float('inf'),False)
+            if valor > melhor_valor:
+                melhor_valor = valor
+                melhor_jogada = coluna
+    return melhor_jogada
+
 
 def inteligencia3(tabuleiro) -> int:
    return 0 
