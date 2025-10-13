@@ -17,31 +17,58 @@ def adicionar(jogo, player: int, pos: int):
     return nova
 
 def ganhou(jogo) -> int:
-    for col in jogo:
-        for i in range(len(col) - 3):
-            slice = col[i:i+4]
+    """
+    Parameters
+    ----------
+    jogo : matriz do jogo
+
+    Returns
+    -------
+    ganhador : int
+        -1 se for empate em um tabuleiro cheio;
+        0 se não tiver ganhador;
+        1 ou 2 se tiver ganhador
+    """
+    np.diagonal
+    # colunas
+    for i in range(len(jogo)):
+        for j in range(len(jogo[0]) - 4, -1, -1):
+            slice = jogo[i, j:j+4]
+            # print(f"{i+1} {j+1}-{j+4} {slice}")
             if all(item == slice[0] and item != 0 for item in slice):
                 return slice[0]
+    # linhas
     for i in range(len(jogo) - 3):
+        for j in range(len(jogo[0]) - 1, -1, -1):
+            slice = jogo[i:i+4, j]
+            # print(f"{i+1}-{i+4} {j+1} {slice}")
+            if all(item == slice[0] and item != 0 for item in slice):
+                return slice[0]
+    # diagonal principal
+    for i in range(len(jogo) - 3):
+        for j in range(len(jogo[0]) - 4, -1, -1):
+            slice = [jogo[i + x, j + x] for x in range(4)]
+            # print(f"{i+1} {j+1} {slice}")
+            if all(item == slice[0] and item != 0 for item in slice):
+                return slice[0]
+    # diagonal secundária
+    for i in range(len(jogo) - 3):
+        for j in range(len(jogo[0]) - 4, -1, -1):
+            slice = [jogo[i - x + 3, j + x] for x in range(4)]
+            # print(f"{i+4} {j+1} {slice}")
+            if all(item == slice[0] and item != 0 for item in slice):
+                return slice[0]
+    # checa se tabuleiro ta cheio
+    for i in range(len(jogo)):
         for j in range(len(jogo[0])):
-            v = jogo[i][j]
-            if v == 0:
-                continue
-            igual = True
-            for o in range(1, 4):
-                if int(jogo[i + o][j]) != int(v):
-                    igual = False
-            if igual:
-                return int(v)
-    # falta verificar se alguém ganhou na diagonal
-    for i in range(len(jogo) - 3):
-        pass
-    return 0
+            if jogo[i][j] == 0:
+                return 0
+    return -1
 
 def printar_jogo(jogo) -> None:
-    print("╭1─2─3─4─5─6─7─╮")
+    print("╭─1─2─3─4─5─6─7─╮")
     for c in range(len(jogo[0])):
-        print("│", end="")
+        print(f"{c+1} ", end="")
         for l in range(len(jogo)):
             oq = jogo[l][c]
             if oq == 0:
@@ -51,7 +78,7 @@ def printar_jogo(jogo) -> None:
             else:
                 print("\x1b[33m⬤\x1b[0m ", end="")
         print("│")
-    print("╰1─2─3─4─5─6─7─╯")
+    print("╰─1─2─3─4─5─6─7─╯")
 
 # ----------------- inteligências -----------------
 def heuristica_simples(tabuleiro, jogador):
@@ -207,26 +234,28 @@ def teste():
     # printar_jogo(j1)
 
     j2 = novo_jogo(6, 7)
-    for i in range(10):
+    for i in range(50):
         j2 = adicionar(j2, i % 2 + 1, randint(0, 6))
+        if ganhou(j2) != 0:
+            break
 
+    # print(j2)
     printar_jogo(j2)
     print(f"{ganhou(j2) = }")
 
-    j3 = novo_jogo(6, 7)
-    j3 = adicionar(j3, 2, 3)
-    j3 = adicionar(j3, 1, 4)
-    j3 = adicionar(j3, 1, 5)
-    j3 = adicionar(j3, 1, 6)
-    printar_jogo(j3)
-    print(f"{ganhou(j3) = }")
+    # j3 = novo_jogo(6, 7)
+    # j3 = adicionar(j3, 2, 3)
+    # j3 = adicionar(j3, 1, 4)
+    # j3 = adicionar(j3, 1, 5)
+    # j3 = adicionar(j3, 1, 6)
+    # printar_jogo(j3)
+    # print(f"{ganhou(j3) = }")
 
-    a = time()
+    # a = time()
 
-    for _ in range(100000):
-        _ = adicionar(j2, 1, 1)
-
-    print(f"tempo: {time() - a}")
+    # for _ in range(100000):
+    #     _ = adicionar(j2, 1, 1)
+    # print(f"tempo: {time() - a}")
 
 # ----------------- interação -----------------
 
@@ -255,10 +284,12 @@ def jogar():
     print("Selecione a dificuldade (1 - Iniciante, 2 - Intermediário, 3 - Profissional)")
     dif = -1
     while dif < 1 or dif > 3:
+        dif_s = input("Valor: ")
         try:
-            dif = int(input("Valor: "))
+            dif = int(dif_s)
         except:
             print("Valor não reconhecido")
+            continue
 
     jogo = novo_jogo(6, 7)
     jogando = 1
@@ -288,11 +319,17 @@ def jogar():
         printar_jogo(jogo)
         ganhador = ganhou(jogo)
         if ganhador != 0:
-            print(f"Ganhador: {ganhador}")
+            match ganhador:
+                case -1:
+                    print("Partida terminou em um empate")
+                case 1:
+                    print("Humano ganhou")
+                case 2:
+                    print("IA ganhou")
             break
 
 
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     # teste()
     jogar()
