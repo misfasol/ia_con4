@@ -265,9 +265,78 @@ def inteligencia2(tabuleiro) -> int:
                 melhor_jogada = coluna
     return melhor_jogada
 
+# Kevin
+def minimax_alfa_beta_ordenado(tabuleiro, profundidade, alfa, beta, maximizando, tempo_limite, inicio_tempo):
+    if time() - inicio_tempo > tempo_limite:  # Verifica limite de tempo
+        return heuristica_avancada(tabuleiro, 2) - heuristica_avancada(tabuleiro, 1)
+    
+    vencedor = ganhou(tabuleiro)
+    if vencedor != 0 or profundidade == 0:
+        if vencedor == 2: return 100000 + profundidade
+        if vencedor == 1: return -100000 - profundidade
+        return heuristica_avancada(tabuleiro, 2) - heuristica_avancada(tabuleiro, 1)
+
+    # Ordena jogadas pela heurística para maximizar poda
+    colunas_ordenadas = ordenar_jogadas(tabuleiro, 2 if maximizando else 1, heuristica_avancada)
+    
+    if maximizando:
+        melhor_valor = -float('inf')
+        for coluna in colunas_ordenadas:
+            if tabuleiro[coluna][0] == 0:
+                tabuleiro_novo = adicionar(tabuleiro, 2, coluna)
+                valor = minimax_alfa_beta_ordenado(tabuleiro_novo, profundidade - 1, alfa, beta, False, tempo_limite, inicio_tempo)
+                if valor > melhor_valor:
+                    melhor_valor = valor
+                alfa = max(alfa, melhor_valor)
+                if alfa >= beta:
+                    break  # Poda alfa-beta
+        return melhor_valor
+    else:
+        pior_valor = float('inf')
+        for coluna in colunas_ordenadas:
+            if tabuleiro[coluna][0] == 0:
+                tabuleiro_novo = adicionar(tabuleiro, 1, coluna)
+                valor = minimax_alfa_beta_ordenado(tabuleiro_novo, profundidade - 1, alfa, beta, True, tempo_limite, inicio_tempo)
+                if valor < pior_valor:
+                    pior_valor = valor
+                beta = min(beta, pior_valor)
+                if alfa >= beta:
+                    break  # Poda alfa-beta
+        return pior_valor
 
 def inteligencia3(tabuleiro) -> int:
-   return 0 
+    profundidade_max = 10
+    melhor_jogada = 0
+    tempo_limite = 3.0
+    inicio_tempo = time()
+    
+    # Iterando profundidade com limite de tempo
+    for prof in range(6, profundidade_max + 1):
+        if time() - inicio_tempo > tempo_limite:
+            break
+            
+        melhor_valor = -float('inf')
+        colunas_ordenadas = ordenar_jogadas(tabuleiro, 2, heuristica_avancada)
+        
+        jogada_temp = melhor_jogada
+        for coluna in colunas_ordenadas:
+            if time() - inicio_tempo > tempo_limite:
+                break
+                
+            if tabuleiro[coluna][0] == 0:
+                novo_tabuleiro = adicionar(tabuleiro, 2, coluna)
+                valor = minimax_alfa_beta_ordenado(novo_tabuleiro, prof - 1, -float('inf'), float('inf'), False, tempo_limite, inicio_tempo)
+                
+                if valor > melhor_valor:
+                    melhor_valor = valor
+                    jogada_temp = coluna
+        
+        # Se completou a busca dessa profundidade, atualiza melhor jogada
+        if time() - inicio_tempo <= tempo_limite:
+            melhor_jogada = jogada_temp
+    
+    return melhor_jogada
+# /Kevin
 
 # ----------------- testes -----------------
 
