@@ -4,9 +4,11 @@ import numpy as np
 
 # ----------------- implementação -----------------
 
+# função para criar novo tabuleiro
 def novo_jogo(linhas: int, cols: int):
     return np.zeros((cols, linhas), dtype=int)
 
+# função para adicionar uma peça ao tabuleiro
 def adicionar(jogo, player: int, pos: int):
     nova = jogo.copy()
     col = nova[pos]
@@ -16,6 +18,7 @@ def adicionar(jogo, player: int, pos: int):
             break
     return nova
 
+# veririficar se algum jogador ganhou a partida ou tabuleiro cheio
 def ganhou(jogo) -> int:
     """
     Parameters
@@ -29,7 +32,6 @@ def ganhou(jogo) -> int:
         0 se não tiver ganhador;
         1 ou 2 se tiver ganhador
     """
-    np.diagonal
     # colunas
     for i in range(len(jogo)):
         for j in range(len(jogo[0]) - 4, -1, -1):
@@ -65,6 +67,7 @@ def ganhou(jogo) -> int:
                 return 0
     return -1
 
+# função de exibir o jogo no terminal
 def printar_jogo(jogo) -> None:
     print("╭─1─2─3─4─5─6─7─╮")
     for c in range(len(jogo[0])):
@@ -81,6 +84,8 @@ def printar_jogo(jogo) -> None:
     print("╰─1─2─3─4─5─6─7─╯")
 
 # ----------------- inteligências -----------------
+
+# veririca a centralidade das peças e número de peças
 def heuristica_simples(tabuleiro, jogador):
     pontos = 0
     for coluna in range(7):
@@ -91,12 +96,14 @@ def heuristica_simples(tabuleiro, jogador):
                     pontos += 1
     return pontos
 
+# verifica sequencias de 2 ou 3 peças seguidas
 def heuristica_intermediaria(tabuleiro, jogador):
     pontos = 0
     # Horizontal
     for linha in range(6):
         for coluna in range(4):
             janela = [tabuleiro[coluna+i][linha] for i in range(4)]
+            # sequencia de 3 vale 10 ponto e de 2 vale 3
             if janela.count(jogador) == 3 and janela.count(0) == 1:
                 pontos += 10
             elif janela.count(jogador) == 2 and janela.count(0) == 2:
@@ -127,12 +134,14 @@ def heuristica_intermediaria(tabuleiro, jogador):
                 pontos += 3
     return pontos
 
+# utiliza conceito anteriores além de avaliar janelas
 def heuristica_avancada(tabuleiro, jogador):
     pontos = 0
-    # Possíveis vitórias
+    # centralidade
     for linha in range(6):
         if tabuleiro[3][linha] == jogador:
             pontos += 4
+    # possíveis vitórias
     for linha in range(6):
         for coluna in range(4):
             janela = [tabuleiro[coluna+i][linha] for i in range(4)]
@@ -149,11 +158,11 @@ def heuristica_avancada(tabuleiro, jogador):
         for linha in range(3):
             janela = [tabuleiro[coluna-i][linha+i] for i in range(4)]
             pontos += avaliar_janela(janela, jogador)
-    # Bloquear
+    # bloquear
     pontos -= heuristica_intermediaria(tabuleiro, 3-jogador) * 2
     return pontos
 
-# Jogadas Futuras
+# avalia se existem possiveis sequencias a serem feitas
 def avaliar_janela(janela, jogador):
     pontos = 0
     adversario = 1 if jogador == 2 else 2
@@ -168,6 +177,7 @@ def avaliar_janela(janela, jogador):
         pontos -= 80
     return pontos
 
+# ordena possiveis jogadas baseado em uma funcao heuristica
 def ordenar_jogadas(tabuleiro, jogador, heuristica_func):
     jogadas = [] 
     for coluna in range(7): 
@@ -178,9 +188,10 @@ def ordenar_jogadas(tabuleiro, jogador, heuristica_func):
     jogadas.sort(reverse=True)
     return [col for valor, col in jogadas]
 
+# minimax simples, sem poda alfa-beta
 def minimax_simples(tabuleiro, profundidade, maximizando):
-    # Minimax simples, sem poda alfa-beta
     vencedor = ganhou(tabuleiro)
+    # condicao de parada
     if profundidade == 0 or vencedor != 0:
         return heuristica_simples(tabuleiro, 2) - heuristica_simples(tabuleiro, 1)
 
@@ -204,7 +215,6 @@ def minimax_simples(tabuleiro, profundidade, maximizando):
                     pior_valor = valor
         return pior_valor
 
-
 def inteligencia1(tabuleiro) -> int:
     melhor_jogada = 0 
     melhor_valor = -float('inf')
@@ -217,11 +227,10 @@ def inteligencia1(tabuleiro) -> int:
                 melhor_jogada = coluna
     return melhor_jogada
 
-
-
+# minimax com poda alfa beta
 def minimax_alfa_beta(tabuleiro, profundidade, alfa, beta, maximizando):
     vencedor = ganhou(tabuleiro)
-
+    # condição de parada
     if vencedor != 0 or profundidade == 0:
         if vencedor == 2: return 100000 + profundidade
         if vencedor == 1: return -100000 - profundidade
@@ -235,6 +244,7 @@ def minimax_alfa_beta(tabuleiro, profundidade, alfa, beta, maximizando):
                 valor = minimax_alfa_beta(tabuleiro_novo, profundidade - 1, alfa, beta, False)
                 if valor > melhor_valor:
                     melhor_valor = valor
+                # parte principal da poda, checa se alfa é maior que beta
                 alfa = max(alfa, melhor_valor)
                 if alfa >= beta:
                     break
@@ -253,6 +263,7 @@ def minimax_alfa_beta(tabuleiro, profundidade, alfa, beta, maximizando):
         return pior_valor
     
 def inteligencia2(tabuleiro) -> int:
+    # profundidade 4
     profundidade = 4
     melhor_jogada = 0
     melhor_valor = -float('inf')
@@ -265,9 +276,9 @@ def inteligencia2(tabuleiro) -> int:
                 melhor_jogada = coluna
     return melhor_jogada
 
-# Kevin
 def minimax_alfa_beta_ordenado(tabuleiro, profundidade, alfa, beta, maximizando, tempo_limite, inicio_tempo):
-    if time() - inicio_tempo > tempo_limite:  # Verifica limite de tempo
+    # condição de parada de tempo
+    if time() - inicio_tempo > tempo_limite:  # verifica limite de tempo
         return heuristica_avancada(tabuleiro, 2) - heuristica_avancada(tabuleiro, 1)
     
     vencedor = ganhou(tabuleiro)
@@ -276,7 +287,7 @@ def minimax_alfa_beta_ordenado(tabuleiro, profundidade, alfa, beta, maximizando,
         if vencedor == 1: return -100000 - profundidade
         return heuristica_avancada(tabuleiro, 2) - heuristica_avancada(tabuleiro, 1)
 
-    # Ordena jogadas pela heurística para maximizar poda
+    # ordena jogadas pela heurística para maximizar poda
     colunas_ordenadas = ordenar_jogadas(tabuleiro, 2 if maximizando else 1, heuristica_avancada)
     
     if maximizando:
@@ -289,7 +300,7 @@ def minimax_alfa_beta_ordenado(tabuleiro, profundidade, alfa, beta, maximizando,
                     melhor_valor = valor
                 alfa = max(alfa, melhor_valor)
                 if alfa >= beta:
-                    break  # Poda alfa-beta
+                    break  # poda alfa-beta
         return melhor_valor
     else:
         pior_valor = float('inf')
@@ -301,7 +312,7 @@ def minimax_alfa_beta_ordenado(tabuleiro, profundidade, alfa, beta, maximizando,
                     pior_valor = valor
                 beta = min(beta, pior_valor)
                 if alfa >= beta:
-                    break  # Poda alfa-beta
+                    break  # poda alfa-beta
         return pior_valor
 
 def inteligencia3(tabuleiro) -> int:
@@ -310,12 +321,13 @@ def inteligencia3(tabuleiro) -> int:
     tempo_limite = 3.0
     inicio_tempo = time()
     
-    # Iterando profundidade com limite de tempo
+    # iterando profundidade com limite de tempo
     for prof in range(6, profundidade_max + 1):
         if time() - inicio_tempo > tempo_limite:
             break
             
         melhor_valor = -float('inf')
+        # agora ordenando as melhores jogadas para ter uma poda melhor
         colunas_ordenadas = ordenar_jogadas(tabuleiro, 2, heuristica_avancada)
         
         jogada_temp = melhor_jogada
@@ -331,12 +343,11 @@ def inteligencia3(tabuleiro) -> int:
                     melhor_valor = valor
                     jogada_temp = coluna
         
-        # Se completou a busca dessa profundidade, atualiza melhor jogada
+        # se completou a busca dessa profundidade, atualiza melhor jogada
         if time() - inicio_tempo <= tempo_limite:
             melhor_jogada = jogada_temp
     
     return melhor_jogada
-# /Kevin
 
 # ----------------- testes -----------------
 
@@ -395,6 +406,7 @@ def pegar_input(jogo) -> int:
 
     return jogada
 
+# codigo do jogo em si, que guarda o tabuleiro e jogador atual
 def jogar():
     print("Selecione a dificuldade (1 - Iniciante, 2 - Intermediário, 3 - Profissional)")
     dif = -1
